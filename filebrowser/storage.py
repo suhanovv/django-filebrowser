@@ -55,6 +55,8 @@ class FileSystemStorageMixin(StorageMixin):
         return os.path.isfile(self.path(name))
 
     def move(self, old_file_name, new_file_name, allow_overwrite=False):
+        if not os.path.exists(os.path.dirname(self.path(new_file_name))):
+            os.makedirs(os.path.dirname(self.path(new_file_name)))
         file_move_safe(self.path(old_file_name), self.path(new_file_name), allow_overwrite=True)
 
     def makedirs(self, name):
@@ -65,6 +67,8 @@ class FileSystemStorageMixin(StorageMixin):
 
     def copy(self, old_file_name, new_file_name):
         if old_file_name != new_file_name:
+            if not os.path.exists(os.path.dirname(self.path(new_file_name))):
+                os.makedirs(os.path.dirname(self.path(new_file_name)))
             if os.path.isdir(self.path(old_file_name)):
                 shutil.copytree(self.path(old_file_name), self.path(new_file_name))
             else:
