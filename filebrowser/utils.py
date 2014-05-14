@@ -56,17 +56,10 @@ def path_strip(path, root):
 
 
 def scale_and_crop(im, width, height, opts):
-    """
-    Scale and Crop.
-    """
+    # if im.mode != 'RGB':
+    #     im = im.convert('RGB')
 
     x, y = [float(v) for v in im.size]
-
-    if 'upscale' not in opts and x < width:
-        # version would be bigger than original
-        # no need to create this version, because "upscale" isn't defined.
-        return False
-
     if width:
         xr = float(width)
     else:
@@ -85,10 +78,28 @@ def scale_and_crop(im, width, height, opts):
         im = im.resize((int(x*r), int(y*r)), resample=Image.ANTIALIAS)
 
     if 'crop' in opts:
-        x, y = [float(v) for v in im.size]
-        ex, ey = (x-min(x, xr))/2, (y-min(y, yr))/2
-        if ex or ey:
-            im = im.crop((int(ex), int(ey), int(x-ex), int(y-ey)))
+        if 'top_left' in opts and x < y:
+            #draw cropping box from upper left corner of image
+            im = im.crop((0, 0, int(min(x, xr)), int(min(y, yr))))
+        elif 'top_right' in opts and x < y:
+            #draw cropping box from upper right corner of image
+            im = im.crop((int(x-min(x, xr)), 0, int(x), int(min(y, yr))))
+        elif 'bottom_left' in opts and x < y:
+            #draw cropping box from lower left corner of image
+            im = im.crop((0, int(y-min(y, yr)), int(xr), int(y)))
+        elif 'bottom_right' in opts and x < y:
+            #draw cropping box from lower right corner of image
+            im = im.crop((int(x-min(x, xr)), int(y-min(y, yr)), int(x), int(y)))
+        elif 'upside' in opts and x < y:
+            x, y = [float(v) for v in im.size]
+            ex, ey = (x-min(x, xr))/2, (y-min(y, yr))/2
+            if ex or ey:
+                im = im.crop((int(ex), 0, int(x-ex), int(y)))
+        else:
+            x, y = [float(v) for v in im.size]
+            ex, ey = (x-min(x, xr))/2, (y-min(y, yr))/2
+            if ex or ey:
+                im = im.crop((int(ex), int(ey), int(x-ex), int(y-ey)))
     return im
 
-scale_and_crop.valid_options = ('crop', 'upscale')
+scale_and_crop.valid_options = ('crop', 'upscale', 'top_left', 'top_right', 'bottom_left', 'bottom_right', 'upside')
