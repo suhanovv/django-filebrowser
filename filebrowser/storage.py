@@ -5,7 +5,9 @@ import os
 import shutil
 
 # DJANGO IMPORTS
-from django.core.files.move import file_move_safe
+from django.core.files.move import file_move_safe, copystat
+
+from filebrowser.settings import DEFAULT_PERMISSIONS
 
 
 class StorageMixin(object):
@@ -58,12 +60,14 @@ class FileSystemStorageMixin(StorageMixin):
         if not os.path.exists(os.path.dirname(self.path(new_file_name))):
             os.makedirs(os.path.dirname(self.path(new_file_name)))
         file_move_safe(self.path(old_file_name), self.path(new_file_name), allow_overwrite=True)
+        os.chmod(self.path(new_file_name), DEFAULT_PERMISSIONS)
+
 
     def makedirs(self, name):
         os.makedirs(self.path(name))
 
     def rmtree(self, name):
-        shutil.rmtree(self.path(name))
+        shutil.rmtree(self.path(name), )
 
     def copy(self, old_file_name, new_file_name):
         if old_file_name != new_file_name:
@@ -73,6 +77,8 @@ class FileSystemStorageMixin(StorageMixin):
                 shutil.copytree(self.path(old_file_name), self.path(new_file_name))
             else:
                 shutil.copy(self.path(old_file_name), self.path(new_file_name))
+
+            copystat(self.path(old_file_name), self.path(new_file_name))
 
 
 class S3BotoStorageMixin(StorageMixin):
